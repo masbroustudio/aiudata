@@ -1,0 +1,39 @@
+{
+  "features": [
+    {
+      "feature": "Supports Databases (Postgres, MySQL, SQLite, MS SQL Server, Snowflake, BigQuery)",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "CSV, Excel support",
+      "dataline": true,
+      "chatgpt": true
+    },
+    {
+      "feature": "Data rows never leave your machine",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Nothing is stored on the cloud",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Data visualization",
+      "dataline": true,
+      "chatgpt": true
+    },
+    {
+      "feature": "Open Source",
+      "dataline": true,
+      "chatgpt": false
+    },
+    {
+      "feature": "Local LLM support",
+      "dataline": "Coming soon",
+      "chatgpt": false
+    }
+  ]
+}

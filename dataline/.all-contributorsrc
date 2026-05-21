@@ -1,0 +1,97 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "RamiAwar",
+      "name": "Rami Awar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/8523191?v=4",
+      "profile": "https://ramiawar.github.io/",
+      "contributions": [
+        "code",
+        "design",
+        "doc",
+        "infra",
+        "platform",
+        "blog",
+        "bug"
+      ]
+    },
+    {
+      "login": "anthony2261",
+      "name": "anthony2261",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26882839?v=4",
+      "profile": "http://anthonymalkoun.com",
+      "contributions": [
+        "code",
+        "ideas",
+        "infra",
+        "platform",
+        "mentoring",
+        "maintenance",
+        "bug"
+      ]
+    },
+    {
+      "login": "wmahad",
+      "name": "Walusimbi Mahad",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11237598?v=4",
+      "profile": "https://github.com/wmahad",
+      "contributions": [
+        "code",
+        "ideas"
+      ]
+    },
+    {
+      "login": "peter-gy",
+      "name": "Péter Gyarmati",
+      "avatar_url": "https://avatars.githubusercontent.com/u/40776291?v=4",
+      "profile": "http://peter.gy",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "joehaddad2000",
+      "name": "Joe Haddad",
+      "avatar_url": "https://avatars.githubusercontent.com/u/71342036?v=4",
+      "profile": "https://github.com/joehaddad2000",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "maryamalki",
+      "name": "maryamalki",
+      "avatar_url": "https://avatars.githubusercontent.com/u/27642194?v=4",
+      "profile": "https://github.com/maryamalki",
+      "contributions": [
+        "code",
+        "doc"
+      ]
+    },
+    {
+      "login": "filip65",
+      "name": "Filip Katušin",
+      "avatar_url": "https://avatars.githubusercontent.com/u/50335272?v=4",
+      "profile": "https://github.com/filip65",
+      "contributions": [
+        "code",
+        "bug"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "dataline",
+  "projectOwner": "RamiAwar"
+}

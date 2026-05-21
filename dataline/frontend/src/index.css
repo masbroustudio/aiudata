@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gradient-x: 0;
+  --gradient-y: 0;
+}
+
+.border-gradient {
+  position: relative;
+}
+
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  z-index: -1;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  background-size: 100% 100%;
+  background-position: var(--gradient-x, 50%) var(--gradient-y, 50%);
+  background-repeat: stretch;
+}
+
+/* For Webkit-based browsers (Chrome, Safari and Opera) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+:root {
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(31, 41, 55, 0);
+}
+
+.simplebar-scrollbar::before {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.simplebar-track {
+  margin: 2px;
+}

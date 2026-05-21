@@ -1,0 +1,121 @@
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@components/Catalyst/alert";
+import { Outlet } from "@tanstack/react-router";
+import { Sidebar } from "./Sidebar";
+import { OpenAIKeyPopup } from "../Settings/OpenAIKeyPopup";
+import { Spinner } from "../Spinner/Spinner";
+import {
+  useGetBackendStatus,
+  useGetConnections,
+  useGetConversations,
+  useGetUserProfile,
+  useGetLlmConnections,
+} from "@/hooks";
+
+import "simplebar-react/dist/simplebar.min.css";
+import { FC } from "react";
+import Login from "@components/Library/Login";
+import { useQuery } from "@tanstack/react-query";
+import { isAuthenticatedQuery } from "@/hooks/auth";
+
+export const LoadingScreen: FC = () => (
+  <Alert open={true} onClose={() => {}} size="sm">
+    <AlertTitle className="flex gap-4 items-center">
+      <Spinner />
+      Loading...
+    </AlertTitle>
+  </Alert>
+);
+
+export const AppLayout: FC = () => {
+  const {
+    isSuccess: isHealthy,
+    isPending: isPendingHealthy,
+    isFetched: isFetchedHealthy,
+  } = useGetBackendStatus();
+  const { data: isAuthenticated, isPending: isPendingAuth } = useQuery(
+    isAuthenticatedQuery()
+  );
+
+  if (isFetchedHealthy && !isHealthy) {
+    return (
+      <Alert open={true} onClose={() => {}} size="sm">
+        <AlertTitle className="flex gap-4 items-center">
+          <span>
+            Could not connect to the backend.{" "}
+            <a
+              className="underline"
+              href="https://github.com/RamiAwar/dataline/blob/main/TROUBLESHOOTING.md"
+              target="_blank"
+            >
+              Troubleshooting
+            </a>
+          </span>
+        </AlertTitle>
+      </Alert>
+    );
+  }
+
+  if (isPendingHealthy || isPendingAuth) {
+    return <LoadingScreen />;
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  return <Main />;
+};
+
+export const Main = () => {
+  const { data: profile, isLoading } = useGetUserProfile();
+  const { data: llmConnections, isLoading: isLoadingLlm } = useGetLlmConnections();
+  const { isPending: isPendingConnections, isError: isErrorConnections } =
+    useGetConnections();
+  const { isPending: isPendingConversations, isError: isErrorConversations } =
+    useGetConversations();
+
+  if (isErrorConnections || isErrorConversations) {
+    return (
+      <Alert open={true} onClose={() => {}} size="sm">
+        <AlertTitle className="flex">Something went wrong</AlertTitle>
+        <AlertDescription>
+          Contact the developers if the problem persists
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  /** If the user information is not loaded yet, show a loading spinner */
+  if (
+    isLoading ||
+    isLoadingLlm ||
+    isPendingConnections ||
+    isPendingConversations
+  ) {
+    return <LoadingScreen />;
+  }
+
+  /** If the user has no LLM connection configured, show the setup popup */
+  const hasLlmConnection = llmConnections && llmConnections.length > 0;
+
+  if (hasLlmConnection) {
+    return (
+      <div className="w-full bg-gray-900">
+        <Sidebar></Sidebar>
+        <main className="lg:pl-72 w-full mt-16 lg:mt-0">
+          <Outlet></Outlet>
+        </main>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <OpenAIKeyPopup />
+      </div>
+    );
+  }
+};

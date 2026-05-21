@@ -1,0 +1,48 @@
+backend/__pycache__
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.Python
+backend/env
+backend/build
+backend/dist
+backend/pip-log.txt
+backend/pip-delete-this-directory.txt
+backend/.tox
+backend/.coverage
+backend/.coverage.*
+backend/.cache
+backend/.venv
+backend/.vscode
+backend/.mypy_cache
+backend/.pytest_cache
+backend/.hypothesis
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/*.log
+backend/.git
+
+# Don't need tests or hooks
+*/tests
+hooks
+./images
+# For bundling the windows app
+!./images/logo.ico
+
+# Exclude bruno
+*/bruno
+
+# Ignore all SQLite DBs, except for sample DBs
+**/*.sqlite3
+!**/samples/*.sqlite3
+
+*/.storybook
+*/node_modules/
+*/dist
+*/.git
+*/npm-debug.log
+*/.coverage
+*/.coverage.*
+*/.env
+*/.aws
