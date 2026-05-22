@@ -513,19 +513,30 @@ class ChartGeneratorTool(StateUpdaterTool):
 
         chart_type = ChartType[args["chart_type"]]
 
-        generated_chart = call(
-            state.options.llm_model,
-            response_model=GeneratedChart,
-            prompt_fn=generate_chart_prompt,
-            client_options=OpenAIClientOptions(
-                api_key=state.options.openai_api_key.get_secret_value(),
-                base_url=state.options.openai_base_url,
-            ),
-        )(
-            chart_type=chart_type,
-            request=args["request"],
-            chartjs_template=TEMPLATES[chart_type],
-        )
+        try:
+            generated_chart = call(
+                state.options.llm_model,
+                response_model=GeneratedChart,
+                prompt_fn=generate_chart_prompt,
+                client_options=OpenAIClientOptions(
+                    api_key=state.options.openai_api_key.get_secret_value(),
+                    base_url=state.options.openai_base_url,
+                ),
+            )(
+                chart_type=chart_type,
+                request=args["request"],
+                chartjs_template=TEMPLATES[chart_type],
+            )
+        except Exception as e:
+            # If chart generation fails (e.g. malformed JSON from LLM), return error to agent
+            tool_message = ToolMessage(
+                content=f"ERROR: Failed to generate chart configuration: {str(e)}. "
+                "Please try again with a simpler chart request.",
+                name=self.name,
+                tool_call_id=call_id,
+            )
+            messages.append(tool_message)
+            return state_update(messages=messages)
 
         # Find the last data result
         last_data_result = None
