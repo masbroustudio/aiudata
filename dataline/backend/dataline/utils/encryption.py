@@ -1,9 +1,17 @@
 import os
 from pathlib import Path
 from cryptography.fernet import Fernet
-from dataline.config import USER_DATA_DIR
 
-SECRET_KEY_PATH = Path(USER_DATA_DIR) / ".secret_key"
+# Store secret key alongside the database in the persistent volume
+# Use SQLITE_PATH env var to determine the data directory, fallback to USER_DATA_DIR
+_SQLITE_PATH = os.environ.get("SQLITE_PATH")
+if _SQLITE_PATH:
+    SECRET_KEY_DIR = Path(_SQLITE_PATH).parent
+else:
+    from dataline.config import USER_DATA_DIR
+    SECRET_KEY_DIR = Path(USER_DATA_DIR)
+
+SECRET_KEY_PATH = SECRET_KEY_DIR / ".secret_key"
 
 def _get_or_create_key() -> bytes:
     if SECRET_KEY_PATH.exists():

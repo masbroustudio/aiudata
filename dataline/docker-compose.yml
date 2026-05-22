@@ -18,8 +18,9 @@ services:
       - .env
     environment:
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-http://localhost:7377,http://0.0.0.0:7377,http://localhost:5173,http://127.0.0.1:5173}"
+      WATCHFILES_FORCE_POLLING: "false"
     working_dir: /home/dataline/backend
-    command: ["bash", "-c", "python -m alembic upgrade 8e6f32050015 && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload"]
+    command: ["bash", "-c", "python -m alembic upgrade 8e6f32050015 && python -m uvicorn dataline.main:app --port=7377 --host=0.0.0.0 --reload --reload-delay=5"]
     volumes:
       - dataline_dev:/home/.dataline # persist local sqlite db
       - ./backend/dataline:/home/dataline/backend/dataline
