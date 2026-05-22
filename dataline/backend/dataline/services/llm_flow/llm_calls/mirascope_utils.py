@@ -1,8 +1,13 @@
-from typing import Callable, Literal, ParamSpec, TypeVar
+from typing import Callable, ParamSpec, TypeVar
 
 from mirascope.core import litellm
 from mirascope.core.base import BaseMessageParam
 from pydantic import BaseModel
+
+from dataline.services.llm_flow.llm_provider import (
+    set_provider_key,
+    restore_provider_key,
+)
 
 
 class OpenAIClientOptions(BaseModel):
@@ -10,7 +15,7 @@ class OpenAIClientOptions(BaseModel):
     base_url: str | None = None
 
 
-# We now support any string model instead of just a literal
+# We support any string model
 AvailableModels = str
 
 _T = TypeVar("_T", bound=BaseModel)
@@ -25,23 +30,16 @@ def call(
 ) -> Callable[P, _T]:
     import os
 
-    # Map model prefix to provider-specific env var (same logic as nodes.py)
-    env_key_map = {
-        "groq": "GROQ_API_KEY",
-        "anthropic": "ANTHROPIC_API_KEY",
-        "gemini": "GEMINI_API_KEY",
-        "openai": "OPENAI_API_KEY",
-        "cerebras": "CEREBRAS_API_KEY",
-        "ollama": None,
-    }
-    provider = model.split("/")[0] if "/" in model else "openai"
-    env_var = env_key_map.get(provider, "OPENAI_API_KEY")
-
-    if client_options.api_key and env_var:
-        os.environ[env_var] = client_options.api_key
+    # Set provider-specific env var (thread-safe)
+    env_var, original_val = ("", None)
+    if client_options.api_key:
+        env_var, original_val = set_provider_key(model, client_options.api_key)
     if client_options.base_url:
         os.environ["LITELLM_API_BASE"] = client_options.base_url
 
+    # Note: We don't restore here because mirascope's decorator pattern
+    # needs the env var set when the returned function is actually called.
+    # The env var will be overwritten on next call anyway.
     return litellm.call(
         model=model,
         response_model=response_model,

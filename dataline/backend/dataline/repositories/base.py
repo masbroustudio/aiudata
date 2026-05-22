@@ -19,7 +19,11 @@ from dataline.models import *  # noqa: F401, F403
 from dataline.models.base import DBModel
 from dataline.utils.utils import get_sqlite_dsn_async
 
-engine = create_async_engine(get_sqlite_dsn_async(config.sqlite_path))
+engine = create_async_engine(
+    get_sqlite_dsn_async(config.sqlite_path),
+    pool_pre_ping=True,  # Verify connections before use
+    echo=config.sqlite_echo,
+)
 
 # We set expire_on_commit to False so that subsequent access to objects that came from a session do not
 # need to emit new SQL queries to refresh the objects if the transaction has been committed already

@@ -16,7 +16,7 @@ from dataline.services.llm_flow.nodes import (
     Node,
     ShouldCallToolCondition,
 )
-from dataline.services.llm_flow.prompt import SQL_FUNCTIONS_SUFFIX, SQL_PREFIX
+from dataline.services.llm_flow.prompt import SQL_FUNCTIONS_SUFFIX, get_system_prompt
 from dataline.services.llm_flow.toolkit import (
     ChartGeneratorTool,
     QueryGraphState,
@@ -42,7 +42,6 @@ def add_conditional_edge(graph: StateGraph, source: Type[Node], condition: Type[
 
 class QueryGraphService:
     def __init__(self, connection: ConnectionProtocol) -> None:
-        # Enable this try catch once we support errors with streaming responses
         try:
             self.db = SQLDatabase.from_dataline_connection(connection)
         except Exception as e:
@@ -53,7 +52,7 @@ class QueryGraphService:
         self.toolkit = SQLDatabaseToolkit(db=self.db)
         all_tools = self.toolkit.get_tools() + [ChartGeneratorTool()]
         self.tool_executor = ToolExecutor(tools=all_tools)
-        self.tracer = None  # no tracing by default
+        self.tracer = None
 
     async def query(
         self, query: str, options: QueryOptions, history: Sequence[BaseMessage] | None = None
@@ -86,8 +85,6 @@ class QueryGraphService:
         }
 
         config: RunnableConfig | None = {"callbacks": [self.tracer]} if self.tracer is not None else None
-        current_results: Sequence[ResultType] | None
-        current_messages: Sequence[BaseMessage] | None
         async for chunk in app.astream(initial_state, config=config):
             for tool, tool_chunk in chunk.items():
                 current_results = tool_chunk.get("results")
@@ -95,7 +92,6 @@ class QueryGraphService:
                 yield (current_messages, current_results)
 
     def build_graph(self) -> StateGraph:
-        # Create the graph
         graph = StateGraph(QueryGraphState)
         add_node(graph, CallModelNode)
         add_node(graph, CallToolNode)
@@ -109,18 +105,18 @@ class QueryGraphService:
     def get_prompt_messages(
         self, query: str, history: Sequence[BaseMessage], top_k: int = 10, suffix: str = SQL_FUNCTIONS_SUFFIX
     ):
-        prefix = SQL_PREFIX
-        prefix = prefix.format(dialect=self.toolkit.dialect, top_k=top_k)
+        # Use improved prompt with dialect hints and few-shot examples
+        system_prompt = get_system_prompt(dialect=self.toolkit.dialect, top_k=top_k)
 
         if not history:
             return [
-                SystemMessage(content=prefix),
+                SystemMessage(content=system_prompt),
                 HumanMessage(content=query),
                 AIMessage(content=suffix),
             ]
         else:
             return [
-                SystemMessage(content=prefix),
+                SystemMessage(content=system_prompt),
                 *history,
                 HumanMessage(content=query),
                 AIMessage(content=suffix),

@@ -513,32 +513,7 @@ class ChartGeneratorTool(StateUpdaterTool):
 
         chart_type = ChartType[args["chart_type"]]
 
-        try:
-            generated_chart = call(
-                state.options.llm_model,
-                response_model=GeneratedChart,
-                prompt_fn=generate_chart_prompt,
-                client_options=OpenAIClientOptions(
-                    api_key=state.options.openai_api_key.get_secret_value(),
-                    base_url=state.options.openai_base_url,
-                ),
-            )(
-                chart_type=chart_type,
-                request=args["request"],
-                chartjs_template=TEMPLATES[chart_type],
-            )
-        except Exception as e:
-            # If chart generation fails (e.g. malformed JSON from LLM), return error to agent
-            tool_message = ToolMessage(
-                content=f"ERROR: Failed to generate chart configuration: {str(e)}. "
-                "Please try again with a simpler chart request.",
-                name=self.name,
-                tool_call_id=call_id,
-            )
-            messages.append(tool_message)
-            return state_update(messages=messages)
-
-        # Find the last data result
+        # Find the last data result FIRST (needed for both approaches)
         last_data_result = None
         for result in reversed(state.results):
             if isinstance(result, SQLQueryRunResult) and result.for_chart:
@@ -547,8 +522,8 @@ class ChartGeneratorTool(StateUpdaterTool):
 
         if last_data_result is None:
             tool_message = ToolMessage(
-                content="ERROR: No data result was found prior to generating"
-                "the chart, failed to populate the chart."
+                content="ERROR: No data result was found prior to generating "
+                "the chart, failed to populate the chart. "
                 "Only use this tool after using the SQL query executor tool!",
                 name=self.name,
                 tool_call_id=call_id,
@@ -556,14 +531,21 @@ class ChartGeneratorTool(StateUpdaterTool):
             messages.append(tool_message)
             return state_update(messages=messages)
 
+        # Use programmatic chart builder (fast, no LLM call needed)
         try:
-            chart_json = query_run_result_to_chart_json(
-                chart_json=generated_chart.chartjs_json,
+            from dataline.services.llm_flow.chart_builder import build_chart_config
+
+            labels = [row[0] for row in last_data_result.rows]
+            values = [row[1] for row in last_data_result.rows]
+            chart_title = args.get("request", "Chart")
+
+            chart_json = build_chart_config(
                 chart_type=chart_type,
-                query_run_data=last_data_result,
+                labels=labels,
+                values=values,
+                title=chart_title,
             )
 
-            # Link to same SQL query string result as the run result does
             result = ChartGenerationResult(
                 chartjs_json=chart_json, chart_type=chart_type.value, linked_id=last_data_result.linked_id
             )
@@ -572,24 +554,22 @@ class ChartGeneratorTool(StateUpdaterTool):
             msg = "Chart generation was successful!"
             if state.options.secure_data:
                 msg += (
-                    "I cannot view the results for security reasons, but the user is able to."
-                    "For this reason I can't do any further analysis on the chart or results. The user could run queries in 'insecure mode'"
-                    "if they'd like me to help further"
+                    " I cannot view the results for security reasons, but the user is able to."
+                    " The user could run queries in 'insecure mode' if they'd like me to help further."
                 )
 
+            tool_message = ToolMessage(content=msg, name=self.name, tool_call_id=call_id)
+            messages.append(tool_message)
+
+        except Exception as e:
             tool_message = ToolMessage(
-                content=msg,
+                content=f"ERROR: Failed to generate chart: {str(e)}. "
+                "Please try again with a simpler chart request.",
                 name=self.name,
                 tool_call_id=call_id,
             )
             messages.append(tool_message)
-        except json.JSONDecodeError as e:
-            message = ToolMessage(
-                content=f"ERROR: Failed to decode chart json. Plese try regenerating the chart: {e.msg}",
-                name=self.name,
-                tool_call_id=call_id,
-            )
-            messages.append(message)
+            return state_update(messages=messages)
 
         return {
             "messages": messages,
